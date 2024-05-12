@@ -1,5 +1,6 @@
 import numpy as np
-
+from node_automatron import node_automatron
+from path_automatron import path_automatron
 def heart_model(node_table, path_table):
     """
     The function updates the parameters for nodes and paths in one time stamp.
