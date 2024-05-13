@@ -9,10 +9,10 @@ class HeartModel:
         self.path_ind = [ 'Idle','Ante','Retro','Double','Conflict' ]
 
 
-    def heart_model_run(node_table, path_table):
+    def heart_model_run(self):
         temp_node = []
         temp_path = []
-        temp_path_node = path_table.copy()
+        temp_path_node = self.simData.path_table.copy()
 
         for i in range(len(node_table)):
             # Find paths connecting to the node

@@ -15,6 +15,26 @@ class Data:
         self.egm_table = []
         self.pace_panel_para = []
 
+        self.formalModeChecked = None
+        self.updateFigureChecked = None
+        self.updateTableChecked = None
+        self.pacemakerOnChecked = None
+        self.displayImageChecked = None
+        self.showUnipolarChecked = None
+        self.formalModeChecked = None
+
+        self.curS1period = None
+        self.curS2period = None
+        self.curS1number = None
+        self.curS2number = None
+        self.curPulseWidth = None
+        self.curAmplitude = None
+        self.curPacePrope = None
+        
+
+        self.SA_CT_a_Checked = None
+        self.CA_Checked = None
+
 
     def load_model(self, filename):
         self.mat = scipy.io.loadmat(filename)
