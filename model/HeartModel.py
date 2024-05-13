@@ -9,79 +9,49 @@ class HeartModel:
         self.path_ind = [ 'Idle','Ante','Retro','Double','Conflict' ]
 
 
-    def heart_model(node_table, path_table):
-        """
-        This function updates the parameters for nodes and paths in one time stamp.
-
-        Args:
-            node_table: List of lists, each inner list contains parameters for one node.
-            path_table: List of lists, each inner list contains parameters for one path.
-
-        Returns:
-            node_table: Updated list containing node parameters.
-            path_table: Updated list containing path parameters.
-        """
-
-        # Local temporary node & path tables
+    def heart_model_run(node_table, path_table):
         temp_node = []
         temp_path = []
-
-        # Temporary path table for node automata updates
         temp_path_node = path_table.copy()
 
         for i in range(len(node_table)):
-            # Find paths connected to the node
-            path_ind = [idx for idx, row in enumerate(path_table) if row[2] == i or row[3] == i]
-            term_ind = [0, 1] * int(len(path_ind) / 2)
+            # Find paths connecting to the node
+            path_ind, term_ind = np.where(np.array(path_table)[:, 2:4] == i)
+            path_ind = path_ind[path_ind != node_table[i][10]]
+            term_ind = term_ind[path_ind != node_table[i][10]]
+            node_table[i][10] = 0
 
-            # Exclude the activating path
-            if node_table[i][11] in path_ind:
-                path_ind = [p for p in path_ind if p != node_table[i][11]]
-                term_ind = [t for t in term_ind if t != node_table[i][11]]
-            node_table[i][11] = 0  # Reset activation path index
-
-            # Update node parameters
-            node, temp_path_node = node_automatron(node_table[i], path_ind, term_ind, temp_path_node)
-            temp_node.append(node)
+            # Update parameters for each node
+            temp_node_row, temp_path_node = node_automatron(node_table[i], path_ind, term_ind, temp_path_node)
+            temp_node.append(temp_node_row)
+            temp_act = temp_node_row[8]
 
         for i in range(len(path_table)):
-            # Update path parameters
-            path, node_act_1, node_act_2 = path_automatron(path_table[i], node_table[path_table[i][2]][9], node_table[path_table[i][3]][9])
-            temp_path.append(path)
+            # Update parameters for each path
+            temp_path_row, node_act_1, node_act_2 = path_automatron(path_table[i], node_table[path_table[i][2]][8], node_table[path_table[i][3]][8])
+            temp_path.append(temp_path_row)
 
-            # Update node activation signals (OR operation)
-            if node_table[path_table[i][2]][2] != 2:
-                node_table[path_table[i][2]][9] = node_table[path_table[i][2]][9] or node_act_1
-                if node_act_1:
-                    node_table[path_table[i][2]][11] = i
+            # Update the local node activation signals of the two nodes
+            if node_table[path_table[i][2]][1] != 2:
+                temp_act = temp_act or node_act_1
+                if node_act_1 == 1:
+                    temp_node[path_table[i][2]][10] = i
             else:
-                node_table[path_table[i][2]][3] = node_table[path_table[i][2]][4]
+                temp_act = False
+                node_table[path_table[i][2]][2] = node_table[path_table[i][2]][3]
 
-            if node_table[path_table[i][3]][2] != 2:
-                node_table[path_table[i][3]][9] = node_table[path_table[i][3]][9] or node_act_2
-                if node_act_2:
-                    node_table[path_table[i][3]][11] = i
+            if node_table[path_table[i][3]][1] != 2:
+                temp_act = temp_act or node_act_2
+                if node_act_2 == 1:
+                    temp_node[path_table[i][3]][10] = i
             else:
-                node_table[path_table[i][3]][3] = node_table[path_table[i][3]][4]
+                temp_act = False
+                node_table[path_table[i][3]][2] = node_table[path_table[i][3]][3]
 
-        # Update node table with temporary data
-        node_table = [node[:8] + [node[9]] + node[10:] for node in temp_node]
+        # Update the parameters to global variables
+        node_table = [row[:8] + [temp_node[i][8]] + row[9:] for i, row in enumerate(node_table)]
 
-        # Update path table with changes in default conduction states
-        for i in range(len(temp_path_node)):
-            if temp_path_node[i][9] != temp_path[i][9]:
-                temp_path[i][9] = temp_path_node[i][9]
-                if temp_path_node[i][2] == 1:
-                    temp_path[i][8] = temp_path[i][9]
-            if temp_path_node[i][11] != temp_path[i][11]:
-                temp_path[i][11] = temp_path_node[i][11]
-                if temp_path_node[i][2] == 1:
-                    temp_path[i][10] = temp_path[i][11]
-
-        # Update path table
-        path_table = temp_path
-
-        return node_table, path_table
+        return node_table, temp_path
     
     def heart_react_pace(probe_table, path_table, probe_pos, node_pos, probe_amp):
         """
@@ -157,6 +127,149 @@ class HeartModel:
                     path_table[cur_path[0]][9] = round(ratio * path_table[cur_path[0]][10])
 
         return path_table
+    
+    def node_automatron(node_para, path_ind, term_ind, path_table):
+        """
+        The function updates the status of a single node by considering the current status of the node.
+
+        Inputs:
+        node_para: List, parameters for the nodes
+            format: ['node name', node_state_index, TERP_current, TERP_default, TRRP_current, TRRP_default, Trest_current, Trest_default, activation, [Terp_min, Terp_max], index_of_path_activate_the_node]
+        path_ind: List, paths connecting to the node except the one activated the node
+        term_ind: List, which terminal the node connecting to the paths (1 or 2)
+
+        Outputs:
+        The same as inputs, just updated values.
+        """
+        temp_act = 0
+
+        if node_para[8]:  # if node is activated
+            temp = node_para[9]
+            match node_para[1]:
+                case 1:  # Rest
+                    # set ERP to longest
+                    node_para[3] = temp[1]
+                    node_para[2] = node_para[3] + round((random.random() - 0.5) * 0 * node_para[3])
+
+                    # reset path conduction speed
+                    for i in range(len(path_ind)):
+                        # if at terminal 1, only affect antegrade conduction; 2 for retrograde conduction
+                        if term_ind[i] == 1:
+                            path_table[path_ind[i]][8] = round((1 + (random.random() - 0.5) * 0) * path_table[path_ind[i]][11] / path_table[path_ind[i]][5])
+                        else:
+                            path_table[path_ind[i]][10] = round((1 + (random.random() - 0.5) * 0) * path_table[path_ind[i]][11] / path_table[path_ind[i]][6])
+
+                    # Reset Trest
+                    node_para[6] = round(node_para[7] * (1 + (random.random() - 0.5) * 0))
+                    # change state to ERP
+                    node_para[1] = 2
+                case 2:  # ERP
+                    # set ERP to the lowest
+                    node_para[3] = temp[0]
+
+                    # set conduction speed to the slowest
+                    for i in range(len(path_ind)):
+                        if term_ind[i] == 1:
+                            path_table[path_ind[i]][8] = round((1 + (random.random() - 0.5) * 0) * path_table[path_ind[i]][11] / path_table[path_ind[i]][5] * (node_para[11] + 1))
+                        else:
+                            path_table[path_ind[i]][10] = round((1 + (random.random() - 0.5) * 0) * path_table[path_ind[i]][11] / path_table[path_ind[i]][6] * 3)
+
+        return node_para, path_table
+    
+    def path_automatron(path_para, node_act_1, node_act_2):
+        """
+        This function updates the status of a single path.
+
+        Inputs:
+        path_para: List, parameters for the paths
+        
+            format: ['path_name', path_state_index, entry_node_index,
+            exit_node_index, amplitude_factor, forward_speed,
+            backward_speed, forward_timer_current, forward_timer_default,
+            backward_timer_current, backward_timer_default, path_length,
+            path_slope]
+        node_act_1: bool, activation status of the entry node
+        node_act_2: bool, activation status of the exit node
+
+        Outputs:
+        temp_act_1: bool, local temporary node activation of the entry node
+        temp_act_2: bool, local temporary node activation of the exit node
+        """
+        temp_act_1 = False
+        temp_act_2 = False
+
+        if path_para[1] == 1:  # Idle
+            # if activation coming from entry node
+            if node_act_1:
+                # Antegrade conduction
+                path_para[1] = 2
+            # if activation coming from exit node
+            elif node_act_2:
+                # Retrograde conduction
+                path_para[1] = 3
+        elif path_para[1] == 2:  # Antegrade conduction
+            # if activation coming from exit node
+            if node_act_2:
+                # double
+                path_para[1] = 5
+            else:
+                # if timer running out
+                if path_para[7] == 0:
+                    # reset timer
+                    path_para[7] = path_para[8]
+                    # activate exit node
+                    temp_act_2 = True
+                    # go to conflict state
+                    path_para[1] = 4
+                else:
+                    # timer
+                    path_para[7] -= 1
+        elif path_para[1] == 3:  # Retro
+            # if activation coming from entry node
+            if node_act_1:
+                # conflict
+                path_para[1] = 5
+            else:
+                # if timer runs out
+                if path_para[9] == 0:
+                    # reset timer
+                    path_para[9] = path_para[10]
+                    # activate the entry node
+                    temp_act_1 = True
+                    # change state to conflict
+                    path_para[1] = 4
+                else:
+                    # timer
+                    path_para[9] -= 1
+        elif path_para[1] == 4:  # Conflict
+            # go to Idle state
+            path_para[1] = 1
+        elif path_para[1] == 5:  # double
+            if path_para[9] == 0:
+                # reset timer
+                path_para[9] = path_para[10]
+                # activate the entry node
+                temp_act_1 = True
+                # change state to conflict
+                path_para[1] = 2
+                return
+            if path_para[7] == 0:
+                # reset timer
+                path_para[7] = path_para[8]
+                # activate exit node
+                temp_act_2 = True
+                # go to conflict state
+                path_para[1] = 3
+                return
+            if abs(1 - path_para[7] / path_para[8] - path_para[9] / path_para[10]) < 0.9 / min([path_para[8], path_para[10]]):
+                path_para[9] = path_para[10]
+                path_para[7] = path_para[8]
+                path_para[1] = 4
+            else:
+                path_para[7] -= 1
+                path_para[9] -= 1
+
+        return path_para, temp_act_1, temp_act_2
     
     def pacing_panel_functional(self, probe_table):
         self.probe_amp = np.zeros(1, probe_table.shape[0])
