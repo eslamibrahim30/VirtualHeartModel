@@ -14,7 +14,7 @@ class GUI:
         Initializes the GUI window with a title and geometry.
         """
         self.heartModel = heartModel
-        self.img_path = "/home/eslam/G4/second_term/control/project/myPythonCode/EP.png"
+        self.img_path = "EP.png"
         self.root = tk.Tk()
 
         self.heartModel.simData.formalModeChecked = tk.IntVar(value=0)
@@ -35,16 +35,16 @@ class GUI:
 
         self.root.title(title)
         self.root.geometry(geometry)
-        self.can = tk.Canvas(self.root).grid(row=0, column=0, rowspan=10, columnspan=2)
 
         for i in range(4):
             self.root.grid_columnconfigure(i, weight=1)
         for i in range(20):
             self.root.grid_rowconfigure(i, weight=1)
-        self.image = ImageTk.PhotoImage(Image.open(self.img_path))
-        # self.img_label = tk.Label(image=self.image)
-        # self.img_label.grid(row=0, column=0, rowspan=10, columnspan=2, padx=10, sticky='w')
-        self.canvas= tk.Canvas(self.root, width=500, height=500, background='white')
+        self.image = Image.open(self.img_path)
+        self.resizedImage = self.image.resize((500,500), Image.LANCZOS)
+        self.imageHeart = ImageTk.PhotoImage(self.resizedImage)
+        self.canvas = tk.Canvas(self.root, width=500, height=500, background='white')
+        self.canvas.create_image(250, 250, image = self.imageHeart)
         self.canvas.grid(row=0,column=0, rowspan=10, columnspan=2, padx=10)
 
         self.buttonRun = tk.Button(self.root, text="Run", background='white', command=self.heartModel.heart_model_run)
