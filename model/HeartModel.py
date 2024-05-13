@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import numpy as np
+import tkinter as tk
 
 
 class HeartModel:
     def __init__(self, data):
         self.simData = data
+        self.path_ind = [ 'Idle','Ante','Retro','Double','Conflict' ]
+
 
     def heart_model(node_table, path_table):
         """
@@ -157,40 +160,4 @@ class HeartModel:
     
     def pacing_panel_functional(self, probe_table):
         self.probe_amp = np.zeros(1, probe_table.shape[0])
-
-        if 'pace_panel' in Config and Config['pace_deliver']['Value']:
-            if pace_panel_para['state'] == 1:  # s1
-                if pace_panel_para['s1n'] > 0:
-                    if pace_panel_para['s1'] > 0:
-                        pace_panel_para['s1'] -= 1
-                    else:
-                        pace_panel_para['s1'] = int(Config['s1']['String'])
-                        pace_panel_para['s1n'] -= 1
-                        pace_panel_para['pace_state'] = 1
-                else:
-                    pace_panel_para['state'] = 2
-                    pace_panel_para['s1'] = int(Config['s1']['String'])
-                    pace_panel_para['s1n'] = int(Config['s1n']['String'])
-
-            elif pace_panel_para['state'] == 2:
-                if pace_panel_para['s2n'] > 0:
-                    if pace_panel_para['s2'] > 0:
-                        pace_panel_para['s2'] -= 1
-                    else:
-                        pace_panel_para['s2'] = int(Config['s2']['String'])
-                        pace_panel_para['s2n'] -= 1
-                        pace_panel_para['pace_state'] = 1
-                else:
-                    Config['pace_deliver']['Value'] = 0
-                    pace_panel_para['s1'] = int(Config['s2']['String'])
-                    pace_panel_para['s1n'] = int(Config['s2n']['String'])
-
-            if pace_panel_para['pace_state']:
-                if pace_panel_para['pulse_w'] > 0:
-                    pace_panel_para['pulse_w'] -= 1
-                    probe_amp[Config['pace_probe']['Value']] = int(Config['pulse_a']['String'])
-                else:
-                    pace_panel_para['pace_state'] = 0
-                    pace_panel_para['pulse_w'] = int(Config['pulse_w']['String'])
-
-        return probe_amp
+        
