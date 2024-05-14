@@ -49,7 +49,7 @@ class GUI:
         self.canvas.create_image(265, 265, image = self.imageHeart)
         self.canvas.grid(row=0,column=0, rowspan=10, columnspan=2, padx=10)
 
-        self.buttonRun = tk.Button(self.root, text="Run", background='white', command=self.heartModel.heart_model_run)
+        self.buttonRun = tk.Button(self.root, text="Run", background='white', command=self.root.quit)
         self.buttonRun.grid(row=1, column=2, sticky='nesw')
     
         self.buttonNodeTable = tk.Button(self.root, text="Node table", background='white', command=self.open_node_table)

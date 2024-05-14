@@ -1,134 +1,67 @@
 #!/usr/bin/env python3
 import numpy as np
-import tkinter as tk
+import random
 
 
 class HeartModel:
     def __init__(self, data):
         self.simData = data
         self.path_ind = [ 'Idle','Ante','Retro','Double','Conflict' ]
+        self.pacing_ind = None
+        self.temp_act = 0
 
 
     def heart_model_run(self):
-        temp_node = []
-        temp_path = []
+        temp_node = self.simData.node_table.copy()
+        temp_path = self.simData.path_table.copy()
         temp_path_node = self.simData.path_table.copy()
 
-        for i in range(len(node_table)):
+        for i in range(len(self.simData.node_table)):
             # Find paths connecting to the node
-            path_ind, term_ind = np.where(np.array(path_table)[:, 2:4] == i)
-            path_ind = path_ind[path_ind != node_table[i][10]]
-            term_ind = term_ind[path_ind != node_table[i][10]]
-            node_table[i][10] = 0
+            result = np.where(np.array(self.simData.path_table)[:, 2:4] == i)
+            if not result or len(result) == 0:
+                # Handle empty results (e.g., set path_ind and term_ind to empty lists)
+                path_ind, term_ind = [], []
+                continue  # Optional: Skip to the next iteration if needed
+            elif len(result) == 2:
+                path_ind, term_ind = tuple(result)
+                path_ind = path_ind[path_ind != self.simData.node_table[i][10]]
+                term_ind = term_ind[path_ind != self.simData.node_table[i][10]]
 
             # Update parameters for each node
-            temp_node_row, temp_path_node = node_automatron(node_table[i], path_ind, term_ind, temp_path_node)
+            temp_node_row, temp_path_node = self.node_automatron(node_table[i], path_ind, term_ind, temp_path_node)
             temp_node.append(temp_node_row)
             temp_act = temp_node_row[8]
 
-        for i in range(len(path_table)):
+        for i in range(len(self.simData.path_table)):
             # Update parameters for each path
-            temp_path_row, node_act_1, node_act_2 = path_automatron(path_table[i], node_table[path_table[i][2]][8], node_table[path_table[i][3]][8])
+            temp_path_row, node_act_1, node_act_2 = self.simData.path_automatron(self.simData.path_table[i], node_table[path_table[i][2]][8], node_table[path_table[i][3]][8])
             temp_path.append(temp_path_row)
 
             # Update the local node activation signals of the two nodes
-            if node_table[path_table[i][2]][1] != 2:
+            if node_table[self.simData.path_table[i][2]][1] != 2:
                 temp_act = temp_act or node_act_1
                 if node_act_1 == 1:
-                    temp_node[path_table[i][2]][10] = i
+                    temp_node[self.simData.path_table[i][2]][10] = i
             else:
                 temp_act = False
-                node_table[path_table[i][2]][2] = node_table[path_table[i][2]][3]
+                node_table[self.simData.path_table[i][2]][2] = node_table[self.simData.path_table[i][2]][3]
 
-            if node_table[path_table[i][3]][1] != 2:
+            if node_table[self.simData.path_table[i][3]][1] != 2:
                 temp_act = temp_act or node_act_2
                 if node_act_2 == 1:
-                    temp_node[path_table[i][3]][10] = i
+                    temp_node[self.simData.path_table[i][3]][10] = i
             else:
                 temp_act = False
-                node_table[path_table[i][3]][2] = node_table[path_table[i][3]][3]
+                node_table[self.simData.path_table[i][3]][2] = node_table[self.simData.path_table[i][3]][3]
 
         # Update the parameters to global variables
-        node_table = [row[:8] + [temp_node[i][8]] + row[9:] for i, row in enumerate(node_table)]
+        node_table = [row[:8] + [temp_node[i][8]] + row[9:] for i, row in enumerate(self.simData.node_table)]
 
         return node_table, temp_path
+
     
-    def heart_react_pace(probe_table, path_table, probe_pos, node_pos, probe_amp):
-        """
-        Determine how the heart will react to pacing signals.
-
-        Args:
-            probe_table: List of lists, each inner list contains 'probe name', 'corresponding path', 'far-field path'.
-            path_table: List of lists, each inner list contains path parameters.
-            probe_pos: List of lists, each inner list contains the position of a probe.
-            node_pos: List of lists, each inner list contains the position of a node.
-            probe_amp: List, amplitude of the probes.
-
-        Returns:
-            path_table: Updated path table.
-        """
-
-        # a persistent variable memorizing the last amplitude to determine rising edge
-        last_amp = []
-
-        # initialize
-        if not last_amp:
-            last_amp = probe_amp.copy()
-
-        # the probes with pacing signals
-        pacing_ind = [i for i in range(len(probe_amp)) if probe_amp[i] > last_amp[i]]
-
-        # renew the variable since the rest of the code will not use it
-        last_amp = probe_amp.copy()
-
-        # for every probe with pacing signals
-        for i in pacing_ind:
-            # corresponding path which will be activated by the pacing signal
-            cur_path = probe_table[i][1]
-            # The position of the probe
-            p0 = probe_pos[i]
-
-            # one node connecting to the path
-            p1 = node_pos[path_table[cur_path[0]][2]]
-
-            # calculating the distance from one point on path and the perpendicular point of the probe on path
-            l = ((p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2) ** 0.5
-            a = path_table[cur_path[0]][12]
-            b = -1
-            c = p1[1] - a * p1[0]
-            d = abs(a * p0[0] + b * p0[1] + c) / ((a ** 2 + b ** 2) ** 0.5)
-            ratio = ((l ** 2 - d ** 2) ** 0.5) / path_table[cur_path[0]][11]
-
-            # calculate the corresponding timer reading
-            switch = path_table[cur_path[0]][1]
-            if switch == 1:  # Idle
-                # go to "double" state
-                path_table[cur_path[0]][1] = 5
-                # change the current timer of Tante and Tretro according to the pacing position
-                path_table[cur_path[0]][7] = round(ratio * path_table[cur_path[0]][8])
-                path_table[cur_path[0]][9] = round((1 - ratio) * path_table[cur_path[0]][10]) + 1
-            elif switch == 2:  # Ante
-                # if the pacing signal exceed the activation wavefront
-                if ratio > path_table[cur_path[0]][7] / path_table[cur_path[0]][8]:
-                    # keep antegrade conduction and change wavefront to the pacing site since the other direction will conflict
-                    path_table[cur_path[0]][7] = round(ratio * path_table[cur_path[0]][8])
-                # else the pacing signal will fall into ERP tissue and blocked
-            elif switch == 3:  # Retro
-                if ratio < path_table[cur_path[0]][9] / path_table[cur_path[0]][10]:
-                    path_table[cur_path[0]][9] = round(ratio * path_table[cur_path[0]][10])
-            elif switch == 4:  # Conflict
-                # pacing signal will fall into ERP tissue
-                pass
-            elif switch == 5:  # Double
-                # the combination of the situation in Ante and Retro
-                if ratio > path_table[cur_path[0]][7] / path_table[cur_path[0]][8]:
-                    path_table[cur_path[0]][7] = round(ratio * path_table[cur_path[0]][8])
-                elif ratio < path_table[cur_path[0]][9] / path_table[cur_path[0]][10]:
-                    path_table[cur_path[0]][9] = round(ratio * path_table[cur_path[0]][10])
-
-        return path_table
-    
-    def node_automatron(node_para, path_ind, term_ind, path_table):
+    def node_automatron(self, node_para, path_ind, term_ind, path_table):
         """
         The function updates the status of a single node by considering the current status of the node.
 
@@ -141,7 +74,7 @@ class HeartModel:
         Outputs:
         The same as inputs, just updated values.
         """
-        temp_act = 0
+        self.temp_act = 0
 
         if node_para[8]:  # if node is activated
             temp = node_para[9]
@@ -271,6 +204,4 @@ class HeartModel:
 
         return path_para, temp_act_1, temp_act_2
     
-    def pacing_panel_functional(self, probe_table):
-        self.probe_amp = np.zeros(1, probe_table.shape[0])
         
