@@ -186,13 +186,13 @@ class GUI:
             self.addNodeWindow.grid_columnconfigure(i, weight=1)
         for i in range(15):
             self.addNodeWindow.grid_rowconfigure(i, weight=1)
-        tk.Label(self.addNodeWindow, text='Name').grid(row=0, columnspan=2)
+        tk.Label(self.addNodeWindow, text='Node Name').grid(row=0, columnspan=2)
         self.newNodeName = tk.Entry(self.addNodeWindow).grid(row=1, columnspan=2, padx=5)
         tk.Label(self.addNodeWindow, text='State').grid(row=2, columnspan=2)
         self.newNodeState = tk.Listbox(self.addNodeWindow, height=3, selectmode=tk.BROWSE)
-        self.newNodeState.insert(0, 'Rest')
-        self.newNodeState.insert(1, 'REP')
-        self.newNodeState.insert(2, 'RRP')
+        self.newNodeState.insert(1, 'Rest')
+        self.newNodeState.insert(2, 'REP')
+        self.newNodeState.insert(3, 'RRP')
         self.newNodeState.grid(row=3, columnspan=2)
         tk.Label(self.addNodeWindow, text='REP_c').grid(row=4, column=0)
         self.newNodeERP1 = tk.Entry(self.addNodeWindow).grid(row=5, column=0, padx=5)
@@ -219,8 +219,31 @@ class GUI:
         self.addPathWindow = tk.Toplevel(self.root)
         for i in range(8):
             self.addPathWindow.grid_columnconfigure(i, weight=1)
-        for i in range(10):
+        for i in range(15):
             self.addPathWindow.grid_rowconfigure(i, weight=1)
+        tk.Label(self.addPathWindow, text='Path Name').grid(row=0, columnspan=2)
+        self.newPathName = tk.Entry(self.addPathWindow).grid(row=1, columnspan=2)
+        tk.Label(self.addPathWindow, text='Select Source Node').grid(row=2, column=0, padx=5)
+        self.selectedSourceNode = tk.Listbox(self.addPathWindow, selectmode=tk.BROWSE, exportselection=False)
+        for i in range(len(self.heartModel.simData.node_table)):
+            self.selectedSourceNode.insert(i + 1, self.heartModel.simData.node_table[i][0])
+        self.selectedSourceNode.grid(row=3, column=0, padx=5, pady=5)
+        tk.Label(self.addPathWindow, text='Select Destination Node').grid(row=2, column=1, padx=5)
+        self.selectedDestinationNode = tk.Listbox(self.addPathWindow, selectmode=tk.BROWSE, exportselection=False)
+        for i in range(len(self.heartModel.simData.node_table)):
+            self.selectedDestinationNode.insert(i + 1, self.heartModel.simData.node_table[i][0])
+        self.selectedDestinationNode.grid(row=3, column=1, padx=5, pady=5)
+        tk.Label(self.addPathWindow, text='Path Amplitude').grid(row=5, columnspan=2)
+        self.newPathAmp = tk.Entry(self.addPathWindow).grid(row=6, columnspan=2)
+        tk.Label(self.addPathWindow, text='Path Ante').grid(row=7, columnspan=2)
+        self.newPathAnte = tk.Entry(self.addPathWindow).grid(row=8, columnspan=2)
+        tk.Label(self.addPathWindow, text='Path Retro').grid(row=9, columnspan=2)
+        self.newPathRetro = tk.Entry(self.addPathWindow).grid(row=10, columnspan=2)
+        self.addNewPath = tk.Button(self.addPathWindow, text="Add path", background='white', command=self.add_path)
+        self.addNewPath.grid(row=11, column=0, padx=5, pady=5, sticky='nesw')
+        self.cancelPath = tk.Button(self.addPathWindow, text="Cancel", background='white', command=self.addPathWindow.destroy)
+        self.cancelPath.grid(row=11, column=1, padx=5, pady=5, sticky='nesw')
+        
         
     
     def open_add_prope(self):
