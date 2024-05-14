@@ -30,10 +30,7 @@ class Data:
         self.curPulseWidth = None
         self.curAmplitude = None
         self.curPacePrope = None
-        
 
-        self.SA_CT_a_Checked = None
-        self.CA_Checked = None
 
 
     def load_model(self, filename):

@@ -5,7 +5,7 @@ This module conatains GUI class for creating GUI object.
 import tkinter as tk
 from tkinter.ttk import Treeview
 from PIL import Image, ImageTk
-from tkinter import filedialog
+from tkinter import filedialog, MULTIPLE
 
 
 class GUI:
@@ -33,6 +33,8 @@ class GUI:
         self.heartModel.simData.curAmplitude = tk.IntVar(value=20)
         self.heartModel.simData.curPacePrope = tk.StringVar(value='HRA1')
 
+        self.newPropeName = tk.StringVar(value='')
+
         self.root.title(title)
         self.root.geometry(geometry)
 
@@ -41,10 +43,10 @@ class GUI:
         for i in range(20):
             self.root.grid_rowconfigure(i, weight=1)
         self.image = Image.open(self.img_path)
-        self.resizedImage = self.image.resize((500,500), Image.LANCZOS)
+        self.resizedImage = self.image.resize((530,530), Image.LANCZOS)
         self.imageHeart = ImageTk.PhotoImage(self.resizedImage)
-        self.canvas = tk.Canvas(self.root, width=500, height=500, background='white')
-        self.canvas.create_image(250, 250, image = self.imageHeart)
+        self.canvas = tk.Canvas(self.root, width=530, height=530, background='white')
+        self.canvas.create_image(265, 265, image = self.imageHeart)
         self.canvas.grid(row=0,column=0, rowspan=10, columnspan=2, padx=10)
 
         self.buttonRun = tk.Button(self.root, text="Run", background='white', command=self.heartModel.heart_model_run)
@@ -228,18 +230,24 @@ class GUI:
         self.addPropeWindow = tk.Toplevel(self.root)
         for i in range(8):
             self.addPropeWindow.grid_columnconfigure(i, weight=1)
-        for i in range(15):
+        for i in range(10):
             self.addPropeWindow.grid_rowconfigure(i, weight=1)
-        
-        self.SA_CT_a = tk.Checkbutton(self.addPropeWindow, text='SA_CT_a', variable=self.heartModel.simData.SA_CT_a_Checked, onvalue=1, offvalue=0)
-        self.SA_CT_a.grid(row=2, column=2)
-        self.CA = tk.Checkbutton(self.addPropeWindow, text='CA', variable=self.heartModel.simData.CA_Checked, onvalue=1, offvalue=0)
-        self.CA.grid(row=2, column=4)
-        self.propeName = tk.Entry(self.addPropeWindow).grid(row=0, column=0)
-        self.addPrope = tk.Button(self.addPropeWindow, text="Add", background='white')
-        self.addPrope.grid(row=14, column=3, sticky='nesw')
-        self.cancelPrope = tk.Button(self.addPropeWindow, text="Cancel", background='white')
-        self.cancelPrope.grid(row=14, column=7, sticky='nesw')
+        tk.Label(self.addPropeWindow, text='Prope Name').grid(row=0, padx=20)
+        self.newPropeName = tk.Entry(self.addPropeWindow).grid(row=1, padx=20)
+        tk.Label(self.addPropeWindow, text='Select Nodes').grid(row=2, padx=20, pady=5)
+        self.selectedPropes = tk.Listbox(self.addPropeWindow, selectmode=MULTIPLE)
+        for i in range(len(self.heartModel.simData.node_table)):
+            self.selectedPropes.insert(i + 1, self.heartModel.simData.node_table[i][0])
+        self.selectedPropes.grid(row=3, padx=20)
+        self.addNewPrope = tk.Button(self.addPropeWindow, text="Add", background='white', command=self.add_prope)
+        self.addNewPrope.grid(row=4, column=0, padx=20, pady=5, sticky='nesw')
+        self.cancelPrope = tk.Button(self.addPropeWindow, text="Cancel", background='white', command=self.addPropeWindow.destroy)
+        self.cancelPrope.grid(row=5, column=0, padx=20, pady=5, sticky='nesw')
+
+    def add_prope(self):
+        # TODO
+        return None
+    
 
     def openEGM(self):
         # TODO
