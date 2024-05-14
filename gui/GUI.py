@@ -5,7 +5,7 @@ This module conatains GUI class for creating GUI object.
 import tkinter as tk
 from tkinter.ttk import Treeview
 from PIL import Image, ImageTk
-from tkinter import filedialog, MULTIPLE
+from tkinter import filedialog
 
 
 class GUI:
@@ -182,26 +182,38 @@ class GUI:
     
     def open_add_node(self):
         self.addNodeWindow = tk.Toplevel(self.root)
-        for i in range(8):
+        for i in range(2):
             self.addNodeWindow.grid_columnconfigure(i, weight=1)
-        for i in range(10):
+        for i in range(15):
             self.addNodeWindow.grid_rowconfigure(i, weight=1)
-        tk.Label(self.addNodeWindow, text='S1 period').grid(row=0, column=1)
-        self.s1Period = tk.Entry(self.addNodeWindow).grid(row=1, column=1)
-        tk.Label(self.addNodeWindow, text='S2 period').grid(row=0, column=3)
-        self.s2Period = tk.Entry(self.addNodeWindow).grid(row=1, column=3)
-        tk.Label(self.addNodeWindow, text='Pulse width').grid(row=0, column=5)
-        self.pulseWidth = tk.Entry(self.addNodeWindow).grid(row=1, column=5)
-        tk.Label(self.addNodeWindow, text='Amplitude').grid(row=0, column=7)
-        self.amplitude = tk.Entry(self.addNodeWindow).grid(row=1, column=7)
-        tk.Label(self.addNodeWindow, text='S1 period').grid(row=3, column=1)
-        self.s1Number = tk.Entry(self.addNodeWindow).grid(row=4, column=1)
-        tk.Label(self.addNodeWindow, text='S1 number').grid(row=3, column=3)
-        self.s2Number = tk.Entry(self.addNodeWindow).grid(row=4, column=3)
-        tk.Label(self.addNodeWindow, text='pace probe').grid(row=3, column=5)
-        self.pacePrope = tk.Entry(self.addNodeWindow).grid(row=4, column=5)
-        self.deliverPace = tk.Button(self.addNodeWindow, text="Deliver", background='white')
-        self.deliverPace.grid(row=4, column=7, sticky='nesw')
+        tk.Label(self.addNodeWindow, text='Name').grid(row=0, columnspan=2)
+        self.newNodeName = tk.Entry(self.addNodeWindow).grid(row=1, columnspan=2, padx=5)
+        tk.Label(self.addNodeWindow, text='State').grid(row=2, columnspan=2)
+        self.newNodeState = tk.Listbox(self.addNodeWindow, height=3, selectmode=tk.BROWSE)
+        self.newNodeState.insert(0, 'Rest')
+        self.newNodeState.insert(1, 'REP')
+        self.newNodeState.insert(2, 'RRP')
+        self.newNodeState.grid(row=3, columnspan=2)
+        tk.Label(self.addNodeWindow, text='REP_c').grid(row=4, column=0)
+        self.newNodeERP1 = tk.Entry(self.addNodeWindow).grid(row=5, column=0, padx=5)
+        tk.Label(self.addNodeWindow, text='REP_d').grid(row=4, column=1)
+        self.newNodeERP2 = tk.Entry(self.addNodeWindow).grid(row=5, column=1, padx=5)
+        tk.Label(self.addNodeWindow, text='RRP_c').grid(row=6, column=0)
+        self.newNodeRRP1 = tk.Entry(self.addNodeWindow).grid(row=7, column=0, padx=5)
+        tk.Label(self.addNodeWindow, text='RRP_c').grid(row=6, column=1)
+        self.newNodeRRP1 = tk.Entry(self.addNodeWindow).grid(row=7, column=1, padx=5)
+        tk.Label(self.addNodeWindow, text='Rest_c').grid(row=8, column=0)
+        self.newNodeRest1 = tk.Entry(self.addNodeWindow).grid(row=9, column=0, padx=5)
+        tk.Label(self.addNodeWindow, text='Rest_c').grid(row=8, column=1)
+        self.newNodeRest2 = tk.Entry(self.addNodeWindow).grid(row=9, column=1, padx=5)
+        tk.Label(self.addNodeWindow, text='Pos_x').grid(row=10, column=0)
+        self.newNodePosX = tk.Entry(self.addNodeWindow).grid(row=11, column=0, padx=5)
+        tk.Label(self.addNodeWindow, text='Pos_y').grid(row=10, column=1)
+        self.newNodePosY = tk.Entry(self.addNodeWindow).grid(row=11, column=1, padx=5)
+        self.deliverPace = tk.Button(self.addNodeWindow, text="Add node", background='white', command=self.add_node)
+        self.deliverPace.grid(row=12, column=0, padx=5, pady=10, sticky='nesw')
+        self.deliverPace = tk.Button(self.addNodeWindow, text="Cancel", background='white', command=self.addNodeWindow.destroy)
+        self.deliverPace.grid(row=12, column=1, padx=5, pady=10, sticky='nesw')
     
     def open_add_path(self):
         self.addPathWindow = tk.Toplevel(self.root)
@@ -209,22 +221,7 @@ class GUI:
             self.addPathWindow.grid_columnconfigure(i, weight=1)
         for i in range(10):
             self.addPathWindow.grid_rowconfigure(i, weight=1)
-        tk.Label(self.addPathWindow, text='S1 period').grid(row=0, column=1)
-        self.s1Period = tk.Entry(self.addPathWindow).grid(row=1, column=1)
-        tk.Label(self.addPathWindow, text='S2 period').grid(row=0, column=3)
-        self.s2Period = tk.Entry(self.addPathWindow).grid(row=1, column=3)
-        tk.Label(self.addPathWindow, text='Pulse width').grid(row=0, column=5)
-        self.pulseWidth = tk.Entry(self.addPathWindow).grid(row=1, column=5)
-        tk.Label(self.addPathWindow, text='Amplitude').grid(row=0, column=7)
-        self.amplitude = tk.Entry(self.addPathWindow).grid(row=1, column=7)
-        tk.Label(self.addPathWindow, text='S1 period').grid(row=3, column=1)
-        self.s1Number = tk.Entry(self.addPathWindow).grid(row=4, column=1)
-        tk.Label(self.addPathWindow, text='S1 number').grid(row=3, column=3)
-        self.s2Number = tk.Entry(self.addPathWindow).grid(row=4, column=3)
-        tk.Label(self.addPathWindow, text='pace probe').grid(row=3, column=5)
-        self.pacePrope = tk.Entry(self.addPathWindow).grid(row=4, column=5)
-        self.deliverPace = tk.Button(self.addPathWindow, text="Deliver", background='white')
-        self.deliverPace.grid(row=4, column=7, sticky='nesw')
+        
     
     def open_add_prope(self):
         self.addPropeWindow = tk.Toplevel(self.root)
@@ -235,14 +232,22 @@ class GUI:
         tk.Label(self.addPropeWindow, text='Prope Name').grid(row=0, padx=20)
         self.newPropeName = tk.Entry(self.addPropeWindow).grid(row=1, padx=20)
         tk.Label(self.addPropeWindow, text='Select Nodes').grid(row=2, padx=20, pady=5)
-        self.selectedPropes = tk.Listbox(self.addPropeWindow, selectmode=MULTIPLE)
+        self.selectedPropes = tk.Listbox(self.addPropeWindow, selectmode=tk.MULTIPLE)
         for i in range(len(self.heartModel.simData.node_table)):
             self.selectedPropes.insert(i + 1, self.heartModel.simData.node_table[i][0])
         self.selectedPropes.grid(row=3, padx=20)
-        self.addNewPrope = tk.Button(self.addPropeWindow, text="Add", background='white', command=self.add_prope)
+        self.addNewPrope = tk.Button(self.addPropeWindow, text="Add prope", background='white', command=self.add_prope)
         self.addNewPrope.grid(row=4, column=0, padx=20, pady=5, sticky='nesw')
         self.cancelPrope = tk.Button(self.addPropeWindow, text="Cancel", background='white', command=self.addPropeWindow.destroy)
         self.cancelPrope.grid(row=5, column=0, padx=20, pady=5, sticky='nesw')
+
+    def add_node(self):
+        # TODO
+        return None
+    
+    def add_path(self):
+        # TODO
+        return None
 
     def add_prope(self):
         # TODO
